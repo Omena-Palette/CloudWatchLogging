@@ -1,3 +1,4 @@
+!/target/doc/cloudwatch_logging
 /target
 /Cargo.lock
 .idea

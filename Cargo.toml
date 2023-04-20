@@ -9,8 +9,11 @@ repository = "https://github.com/Omena-Palette/CloudWatchLogging"
 license = "MIT"
 keywords = ["aws", "cloudwatch", "logging"]
 categories = ["api-bindings", "cloud::aws", "logging::log"]
-documentation = "./target/doc/cloudwatch_logging/index.html"
-
+#documentation = "./target/doc/cloudwatch_logging/index.html"
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
