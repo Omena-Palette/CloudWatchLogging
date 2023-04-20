@@ -10,7 +10,7 @@ license = "MIT"
 keywords = ["aws", "cloudwatch", "logging"]
 categories = ["api-bindings", "development-tools::debugging"]
 exclude = [
-    "tests",
+    "tests/**/*",
 ]
 include = [
     "**/*.rs",
