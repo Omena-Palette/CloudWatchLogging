@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/Omena-Palette/CloudWatchLogging"
 license = "MIT"
 keywords = ["aws", "cloudwatch", "logging"]
-categories = ["api-bindings", "cloud::aws", "logging::log"]
+categories = ["api-bindings", "development-tools::debugging"]
 #documentation = "./target/doc/cloudwatch_logging/index.html"
 include = [
     "**/*.rs",
