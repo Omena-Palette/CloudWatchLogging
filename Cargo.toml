@@ -1,6 +1,6 @@
 [package]
 name = "cloudwatch_logging"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Omena, Inc. <info@omena.ai>", "Clelland Green III"]
 description = "A simple library for logging to AWS CloudWatch Logs"
@@ -9,7 +9,7 @@ repository = "https://github.com/Omena-Palette/CloudWatchLogging"
 license = "MIT"
 keywords = ["aws", "cloudwatch", "logging"]
 categories = ["api-bindings", "development-tools::debugging"]
-#documentation = "./target/doc/cloudwatch_logging/index.html"
+documentation = "https://github.com/Omena-Palette/CloudWatchLogging/blob/main/docs/index.html"
 include = [
     "**/*.rs",
     "Cargo.toml",
