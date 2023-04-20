@@ -9,7 +9,6 @@ repository = "https://github.com/Omena-Palette/CloudWatchLogging"
 license = "MIT"
 keywords = ["aws", "cloudwatch", "logging"]
 categories = ["api-bindings", "development-tools::debugging"]
-documentation = "https://github.com/Omena-Palette/CloudWatchLogging/blob/main/docs/index.html"
 include = [
     "**/*.rs",
     "Cargo.toml",
