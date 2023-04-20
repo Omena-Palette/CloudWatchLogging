@@ -10,8 +10,8 @@ use cloudwatch_logging::Logger;
 
 async fn example() {
     let mut logger = Logger::get("my-log-group", "my-log-stream").await;
-    logger.info("Hello, world!").await;
-    logger.error("Something went wrong!").await;
+    logger.info("Hello, world!".to_string()).await;
+    logger.error("Something went wrong!".to_string()).await;
 }
 ```
 
