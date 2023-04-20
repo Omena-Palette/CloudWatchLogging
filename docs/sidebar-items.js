@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Logger","A Logger for AWS CloudWatch Logs"]]};
