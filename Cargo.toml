@@ -1,0 +1,23 @@
+[package]
+name = "cloudwatch_logging"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+log-batching = ["tokio"]
+log-panics = ["tokio"]
+DEBUG = []
+default = ["log-batching", "log-panics"]
+
+[dependencies]
+rusoto_core = "0.48.0"
+rusoto_logs = "0.48.0"
+chrono = "0.4.24"
+lazy_static = "1.4.0"
+tokio = { version = "1.6.1", features = ["full"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.6.1", features = ["full"] }
+tokio-test = "0.4.2"
