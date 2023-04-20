@@ -1,5 +1,9 @@
 use cloudwatch_logging::Logger;
 use rusoto_logs::OutputLogEvent;
+use std::{env, str::FromStr};
+use rusoto_core::Region;
+use rusoto_logs::CloudWatchLogsClient;
+use rusoto_logs::CloudWatchLogs;
 
 async fn create_test_log_group_and_stream() {
     use rusoto_logs::{CreateLogGroupRequest, CreateLogStreamRequest};
@@ -53,5 +57,5 @@ async fn test_cloudwatch_logging() {
         "test-stream".to_string(),
     ).await;
 
-    logger.info("test message").await;
+    logger.info("test message".to_string()).await;
 }
