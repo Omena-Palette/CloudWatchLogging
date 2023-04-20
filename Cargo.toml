@@ -1,6 +1,6 @@
 [package]
 name = "cloudwatch_logging"
-version = "0.1.13"
+version = "0.1.14"
 edition = "2021"
 authors = ["Omena, Inc. <info@omena.ai>", "Clelland Green III"]
 description = "A simple library for logging to AWS CloudWatch Logs"
@@ -23,12 +23,13 @@ include = [
 log-batching = ["tokio"]
 log-panics = ["tokio"]
 DEBUG = []
-default = ["log-batching", "log-panics"]
+default = ["log-batching", "log-panics", "chrono"]
 
 [dependencies]
 rusoto_core = "0.48.0"
 rusoto_logs = "0.48.0"
-chrono = "0.4.24"
+chrono = { version = "0.4.24", optional = true }
+time = { version = "0.3.20", optional = true }
 lazy_static = "1.4.0"
 tokio = { version = "1.6.1", features = ["full"], optional = true }
 

@@ -157,6 +157,18 @@ fn get_message(log_nature: LogNature, message: String) -> String {
     format!("[{}] {}", prefix, message)
 }
 
+#[cfg(not(feature = "time"))]
+#[cfg(feature = "chrono")]
+fn get_timestamp() -> i64 {
+    chrono::Utc::now().timestamp_millis()
+}
+
+#[cfg(not(feature = "chrono"))]
+#[cfg(feature = "time")]
+fn get_timestamp() -> i128 {
+    time::OffsetDateTime::now_utc().unix_timestamp_nanos() / 1_000_000
+}
+
 #[cfg(not(feature = "log-batching"))]
 impl Logger {
     /// Creates a new logger instance
@@ -229,7 +241,7 @@ impl Logger {
         let message = get_message(nature, message);
         let input_log_event = InputLogEvent {
             message,
-            timestamp: chrono::Utc::now().timestamp_millis(),
+            timestamp: get_timestamp(),
         };
         let mut put_req: PutLogEventsRequest = Default::default();
         put_req.log_group_name = self.log_group_name.clone();
@@ -413,7 +425,7 @@ impl LoggerWorker {
         let message = get_message(nature, message);
         let input_log_event = InputLogEvent {
             message,
-            timestamp: chrono::Utc::now().timestamp_millis(),
+            timestamp: get_timestamp(),
         };
         let mut log_events = self.log_events.lock().await;
         log_events.push(input_log_event);
