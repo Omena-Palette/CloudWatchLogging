@@ -1,6 +1,6 @@
 [package]
 name = "cloudwatch_logging"
-version = "0.1.01"
+version = "0.1.11"
 edition = "2021"
 authors = ["Omena, Inc. <info@omena.ai>", "Clelland Green III"]
 description = "A simple library for logging to AWS CloudWatch Logs"
