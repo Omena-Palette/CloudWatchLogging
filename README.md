@@ -9,7 +9,11 @@ batching, ensuring flushes, logging panics, etc.
 use cloudwatch_logging::Logger;
 
 async fn example() {
-    let mut logger = Logger::get("my-log-group", "my-log-stream").await;
+    let mut logger = Logger::get(
+        "my-log-group".to_string(),
+        "my-log-stream".to_string()
+    ).await;
+    
     logger.info("Hello, world!".to_string()).await;
     logger.error("Something went wrong!".to_string()).await;
 }

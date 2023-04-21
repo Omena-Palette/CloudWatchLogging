@@ -165,8 +165,8 @@ fn get_timestamp() -> i64 {
 
 #[cfg(not(feature = "chrono"))]
 #[cfg(feature = "time")]
-fn get_timestamp() -> i128 {
-    time::OffsetDateTime::now_utc().unix_timestamp_nanos() / 1_000_000
+fn get_timestamp() -> i64 {
+    (time::OffsetDateTime::now_utc().unix_timestamp_nanos() / 1_000_000) as i64
 }
 
 #[cfg(not(feature = "log-batching"))]
