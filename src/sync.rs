@@ -1,3 +1,6 @@
+//! This module provides a Lazy type that is used internally for initializing
+//! the LoggerHandle singleton.
+
 #[cfg(not(all(test, feature = "loom")))]
 use core::sync::atomic::{Ordering, AtomicU8};
 #[cfg(not(all(test, feature = "loom")))]
@@ -30,6 +33,10 @@ impl<H, T> Lazy<H, T>
 where
     H: Setup<T, LoggerError>,
 {
+    /// Get or initialize the value.
+    ///
+    /// This function returns the inner value if it's already initialized,
+    /// or it initializes and returns it if not.
     pub async fn get_or_init(
         &self, log_group_name: &'static str, log_stream_name: &'static str,
         batch_size: usize, interval: Duration
@@ -92,6 +99,8 @@ impl Default for Lazy<LoggerHandle, Logger> {
     }
 }
 
+// This is for the LoggerHandle which is a background process, this type is not
+// exposed, and should not be used outside of this crate.
 unsafe impl Sync for Lazy<LoggerHandle, Logger> {}
 
 #[cfg(test)]
