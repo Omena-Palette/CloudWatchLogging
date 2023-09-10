@@ -89,7 +89,7 @@ async fn example() -> Result<(), LoggerError> {
 ```
 
 ### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/Omena-Palette/CloudWatchLogging/blob/main/LICENSE) file for details.
 
 ### Acknowledgements
 We'd like to acknowledge the incredible work of the Rusoto community for their AWS SDK, their thoughtful implementation

@@ -17,8 +17,6 @@ include = [
     "Cargo.toml",
 ]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [features]
 singleton = ["lazy_static", "loom"]
 loom = []
@@ -37,3 +35,9 @@ async-trait = "0.1.73"
 tokio = { version = "1.6.1", features = ["full"] }
 tokio-test = "0.4.2"
 loom = { version = "0.7.0", features = ["futures"] }
+
+[package.metadata.docs.rs]
+all-features = true
+default-target = "x86_64-unknown-linux-gnu"
+rustdoc-args = ["--generate-link-to-definition"]
+cargo-args = ["-Z", "build-std"]
