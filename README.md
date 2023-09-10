@@ -1,23 +1,34 @@
 # CloudWatch Logging SDK for Rust
 
-This is a wrapper around the community made Rusoto SDK for AWS services. 
-It provides a simple interface for logging to CloudWatch in an optimal manner, abstracting away the nuances like 
-batching, ensuring flushes, logging panics, etc.
+The CloudWatch Logging SDK for Rust provides a simple and efficient way to log to Amazon CloudWatch Logs.
 
-## Version 0.2.0
+### Features
 
-**Breaking Changes**
+- Easy setup for CloudWatch logging.
+- Automatic batching and non-blocking flushes for optimal performance.
+- Seamless panic logging for enhanced reliability.
+
+### Installation
+
+Add the following dependency to your `Cargo.toml` file:
+
+```toml
+[dependencies]
+cloudwatch-logging = "0.2.0"
+```
+
+### Breaking Changes
+
+#### Version 0.2.0
+
 - Entry point is now `LoggerHandle` instead of `Logger`
 - `Logger::get` is now `LoggerHandle::get_or_setup` with the `singleton` feature enabled
 - Now takes static string slices instead of owned strings.
 
-**Improvements**
-- Performance and reliability improvements
+<sub>**The api is now stable and will not change unless there is a major version bump. Migrating to the new version
+requires very little effort, everything remained the same outside the entry point.**</sub>
 
-The api is now stable and will not change unless there is a major version bump. Migrating to the new version
-requires very little effort, everything remained the same outside the entry point.
-
-## Usage
+### Usage
 ```rust
 use cloudwatch_logging::{
     LoggerHandle, LoggerError, Logger,
@@ -77,7 +88,13 @@ async fn example() -> Result<(), LoggerError> {
 }
 ```
 
-### Notes
+### License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-**Cloning the Logger** <br>
-Very cheap, same cost as cloning a Sender from a mpsc channel. 
+### Acknowledgements
+We'd like to acknowledge the incredible work of the Rusoto community for their AWS SDK, their thoughtful implementation
+of Smithy, and their dedication to the Rust community. 
+
+### Rusoto
+Rusoto is no longer maintained, although it is stable, and widely used in production still. Once the official AWS SDK
+is stable, this library will be updated to use it instead.
