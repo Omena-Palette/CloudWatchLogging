@@ -2,7 +2,7 @@
 name = "cloudwatch_logging"
 version = "0.2.0"
 edition = "2021"
-authors = ["Omena, Inc. <info@omena.ai>", "Clelland Green III"]
+authors = ["Omena Inc. <info@omena.ai>", "Clelland Green III"]
 description = "A simple library for logging to AWS CloudWatch Logs"
 readme = "README.md"
 repository = "https://github.com/Omena-Palette/CloudWatchLogging"
