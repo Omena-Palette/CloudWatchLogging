@@ -11,4 +11,6 @@ pub(crate) mod levels;
 #[cfg(feature = "singleton")]
 pub(crate) mod sync;
 
-pub use prelude::*;
+pub use prelude::{
+    Logger, LoggerHandle, Setup, LoggerError
+};

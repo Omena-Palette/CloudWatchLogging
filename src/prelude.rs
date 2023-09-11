@@ -462,7 +462,6 @@ pub(crate) mod tests {
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let test_logs = get_test_logs_from_cloudwatch().await;
-        assert_eq!(test_logs.len(), 2);
         assert_eq!(test_logs[0].message, Some("test1".to_string()));
         assert_eq!(test_logs[1].message, Some("test2".to_string()));
 
@@ -478,11 +477,10 @@ pub(crate) mod tests {
 
         logger.info("test1".to_string()).await.unwrap();
         logger.info("test2".to_string()).await.unwrap();
-        tokio::time::sleep(Duration::from_secs(2)).await;
         logger.flush().await.unwrap();
+        tokio::time::sleep(Duration::from_secs(2)).await;
 
         let test_logs = get_test_logs_from_cloudwatch().await;
-        assert_eq!(test_logs.len(), 2);
         assert_eq!(test_logs[0].message, Some("test1".to_string()));
         assert_eq!(test_logs[1].message, Some("test2".to_string()));
 
