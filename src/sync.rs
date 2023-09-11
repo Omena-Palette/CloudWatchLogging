@@ -20,7 +20,8 @@ use crate::prelude::{Logger, LoggerHandle, Setup};
 enum LoggerHandleState {
     Unloaded = 0,
     Locked = 1,
-    Ready = 2
+    Ready = 2,
+    Poisoned = 3,
 }
 
 pub(crate) struct Lazy<H: Setup<T, LoggerError>, T> {
@@ -56,31 +57,35 @@ where
             Ordering::Relaxed
         ) {
             Ok(_) => {
+                let result = H::setup(
+                    log_group_name, log_stream_name, batch_size, interval
+                ).await;
 
-                unsafe {
-                    *self.inner.get() = Some(
-                        H::setup(
-                            log_group_name, log_stream_name, batch_size, interval
-                        ).await?
-                    );
-                }
-
-                self.state.store(LoggerHandleState::Ready as u8, Ordering::Release);
-
-                unsafe {
-                    Ok((*self.inner.get()).as_ref().ok_or(LoggerError::Poisoned)?)
+                match result {
+                    Ok(value) => {
+                        // Store the successfully initialized logger.
+                        unsafe { *self.inner.get() = Some(value); }
+                        self.state.store(LoggerHandleState::Ready as u8, Ordering::Release);
+                        Ok(unsafe { (*self.inner.get()).as_ref().unwrap() })
+                    },
+                    Err(e) => {
+                        // Mark the logger as poisoned.
+                        self.state.store(LoggerHandleState::Poisoned as u8, Ordering::Release);
+                        Err(e)
+                    }
                 }
             }
 
             Err(_) => {
-                // Yielding to the other thread
+                if self.state.load(Ordering::Acquire) == LoggerHandleState::Poisoned as u8 {
+                    return Err(LoggerError::Poisoned);
+                }
                 while self.state.load(Ordering::Acquire) != LoggerHandleState::Ready as u8 {
                     #[cfg(not(all(test, feature = "loom")))]
                     yield_now().await;
                     #[cfg(all(test, feature = "loom"))]
                     yield_now();
                 }
-
                 unsafe {
                     Ok((*self.inner.get()).as_ref().ok_or(LoggerError::Poisoned)?)
                 }
