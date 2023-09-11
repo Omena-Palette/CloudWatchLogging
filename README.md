@@ -14,7 +14,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-cloudwatch-logging = "0.2.2"
+cloudwatch-logging = "0.2.3"
 ```
 
 ### Breaking Changes
@@ -30,10 +30,7 @@ requires very little effort, everything remained the same outside the entry poin
 
 ### Usage
 ```rust
-use cloudwatch_logging::{
-    LoggerHandle, LoggerError, Logger,
-    Duration
-};
+use cloudwatch_logging::prelude::*;
 
 async fn example() -> Result<(), LoggerError> {
     let logger = LoggerHandle::setup(
@@ -44,17 +41,15 @@ async fn example() -> Result<(), LoggerError> {
     ).await?;
     
     logger.info("Hello, world!".to_string()).await?;
-    logger.error("Something went wrong!".to_string()).await?;
+    logger.error("Something went wrong!".to_string()).await
 }
 ```
 
 **`singleton` Feature**
 ```rust
-use cloudwatch_logging::{
-    LoggerHandle, LoggerError, Logger,
-    Duration
-};
+use cloudwatch_logging::prelude::*;
 
+#[cfg(feature = "singleton")]
 async fn example() -> Result<(), LoggerError> {
     let logger = LoggerHandle::get_or_setup( // will only setup once
         "my-log-group",
@@ -64,17 +59,14 @@ async fn example() -> Result<(), LoggerError> {
     ).await?;
     
     logger.info("Hello, world!".to_string()).await?;
-    logger.error("Something went wrong!".to_string()).await?;
+    logger.error("Something went wrong!".to_string()).await
 }
 ```
 
 **Logging Panics**
 
 ```rust
-use cloudwatch_logging::{
-    LoggerHandle, LoggerError, Logger,
-    Duration
-};
+use cloudwatch_logging::prelude::*;
 
 async fn example() -> Result<(), LoggerError> {
     let logger = LoggerHandle::setup(
@@ -84,7 +76,7 @@ async fn example() -> Result<(), LoggerError> {
         Duration::from_secs(5), // flush interval
     ).await?;
     
-    logger.log_panics(); // future panics will be logged to cloudwatch
+    logger.log_panics() // future panics will be logged to cloudwatch
 }
 ```
 
