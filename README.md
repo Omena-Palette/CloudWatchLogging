@@ -14,7 +14,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-cloudwatch-logging = "0.2.0"
+cloudwatch-logging = "0.2.2"
 ```
 
 ### Breaking Changes
