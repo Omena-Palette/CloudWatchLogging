@@ -2,11 +2,13 @@
 //! <br><br>
 //!
 //! ## You're probably looking for:
-//! * [`Logger`](prelude::Logger)
-//! * [`LoggerHandle`](prelude::LoggerHandle)
+//! * [`Logger`](Logger)
+//! * [`LoggerHandle`](LoggerHandle)
 
 pub mod prelude;
 pub mod error;
 pub(crate) mod levels;
 #[cfg(feature = "singleton")]
 pub(crate) mod sync;
+
+pub use prelude::*;

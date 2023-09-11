@@ -1,6 +1,6 @@
 [package]
 name = "cloudwatch_logging"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Omena Inc. <info@omena.ai>", "Clelland Green III"]
 description = "A simple library for logging to AWS CloudWatch Logs"
@@ -21,7 +21,7 @@ include = [
 singleton = ["lazy_static", "loom"]
 loom = []
 DEBUG = []
-default = ["singleton", "DEBUG"]
+default = []
 
 [dependencies]
 rusoto_core = "0.48.0"
