@@ -223,7 +223,7 @@ macro_rules! setup_from_env_doc {
         concat!(
             " # Safety\n",
             "\n",
-            " This function intentionally leaks the input strings.\n",
+            " This function intentionally leaks the env var values.\n",
             "\n",
             " It's designed to be invoked exclusively by the [`LoggerHandle::get_or_setup_with_env`] method. Specifically, this function\n",
             " isn't directly invoked; instead, it's encapsulated within the private `sync::Lazy<H, T>` struct, ensuring a single execution.\n",
@@ -401,12 +401,9 @@ impl LoggerHandle {
     }
 
     /// [get_or_setup](LoggerHandle::get_or_setup) but with environment variable names for the
-    /// log group and stream names.
+    /// log group and stream name.
     ///
     /// <br>
-    ///
-    /// This leaks the input strings, as this is a static background process, these values must
-    /// live until the end of the program.
     ///
     /// # Arguments
     ///
