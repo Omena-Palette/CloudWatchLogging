@@ -15,7 +15,7 @@ use loom::{
 use tokio::time::Duration;
 
 use crate::error::LoggerError;
-use crate::prelude::{Logger, LoggerHandle, Setup};
+use crate::prelude::{Logger, LoggerHandle, SetupLogger};
 
 enum LoggerHandleState {
     Unloaded = 0,
@@ -24,7 +24,7 @@ enum LoggerHandleState {
     Poisoned = 3,
 }
 
-pub(crate) struct Lazy<H: Setup<T, LoggerError>, T> {
+pub(crate) struct Lazy<H: SetupLogger<T, LoggerError>, T> {
     inner: core::cell::UnsafeCell<Option<T>>,
     state: AtomicU8,
     _handle_phantom: core::marker::PhantomData<H>,
@@ -32,7 +32,7 @@ pub(crate) struct Lazy<H: Setup<T, LoggerError>, T> {
 
 impl<H, T> Lazy<H, T>
 where
-    H: Setup<T, LoggerError>,
+    H: SetupLogger<T, LoggerError>,
 {
     /// Get or initialize the value.
     ///
@@ -104,46 +104,56 @@ impl Default for Lazy<LoggerHandle, Logger> {
     }
 }
 
+#[cfg(not(all(test, feature = "loom")))]
+pub(crate) const fn new_lazy<H: SetupLogger<T, LoggerError>, T>() -> Lazy<H, T> {
+    Lazy {
+        inner: core::cell::UnsafeCell::new(None),
+        state: AtomicU8::new(LoggerHandleState::Unloaded as u8),
+        _handle_phantom: std::marker::PhantomData,
+    }
+}
+
 // This is for the LoggerHandle which is a background process, this type is not
 // exposed, and should not be used outside of this crate.
 unsafe impl Sync for Lazy<LoggerHandle, Logger> {}
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "loom")))]
 mod tests {
     use super::*;
+    use crate::prelude::__tests::{setup, teardown};
+
+    #[tokio::test]
+    async fn naive_test() {
+        setup().await;
+
+        let handle: Lazy<LoggerHandle, Logger> = new_lazy();
+
+        let _hello = handle.get_or_init(
+            "test-group", "test-stream", 2, Duration::from_secs(1)
+        ).await.cloned();
+
+        teardown().await;
+    }
+}
+
+#[cfg(all(test, feature = "loom"))]
+mod loom_tests {
+    use super::*;
+    use crate::prelude::__tests::{setup, teardown};
+
     use loom::thread;
     use loom::sync::Arc;
     use loom::future::block_on;
     use async_trait::async_trait;
 
-    use crate::prelude::tests::{setup, teardown};
 
-    #[cfg(not(feature = "loom"))]
-    #[tokio::test]
-    async fn naive_test() {
-        setup().await;
-
-        let handle = LazyLoggerHandle {
-            inner: core::cell::UnsafeCell::new(None),
-            state: AtomicU8::new(LoggerHandleState::Unloaded as u8)
-        };
-
-        let hello = handle.get_or_init(
-            "test-group", "test-stream", 2, Duration::from_secs(1)
-        ).await.as_ref().unwrap();
-
-        teardown().await;
-    }
-
-    #[cfg(feature = "loom")]
     #[derive(Clone)]
     struct AStructForLoom {
         a_value: u8,
     }
 
-    #[cfg(feature = "loom")]
     #[async_trait]
-    impl Setup<AStructForLoom, LoggerError> for AStructForLoom {
+    impl SetupLogger<AStructForLoom, LoggerError> for AStructForLoom {
         async fn setup(
             _log_group_name: &'static str, _log_stream_name: &'static str,
             _batch_size: usize, _interval: Duration
@@ -154,7 +164,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "loom")]
     impl Default for Lazy<AStructForLoom, AStructForLoom> {
         fn default() -> Self {
             Self {
@@ -165,7 +174,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "loom")]
     fn loom_helper(handle_clone: Arc<Lazy<AStructForLoom, AStructForLoom>>) {
         let out = block_on(async {
             handle_clone.get_or_init(
@@ -175,7 +183,6 @@ mod tests {
         assert_eq!(out.a_value, 1);
     }
 
-    #[cfg(feature = "loom")]
     #[tokio::test]
     async fn test_lazy_logger_handle() {
         setup().await;

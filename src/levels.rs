@@ -1,26 +1,26 @@
-use rusoto_logs::InputLogEvent;
+pub type Message = String;
 
 pub enum LogLevel {
-    Info(InputLogEvent),
-    Error(InputLogEvent),
-    Panic(InputLogEvent),
+    Info(Message),
+    Error(Message),
+    Panic(Message),
     Flush,
 }
 
 #[cfg(feature = "DEBUG")]
-impl std::fmt::Debug for LogLevel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl LogLevel {
+    pub(crate) fn debug(&self, timestamp: i64) {
         match self {
-            LogLevel::Info(e) => write!(
-                f, "\x1b[90m[{:?}]\x1b[0m \x1b[33mINFO:\x1b[0m {}", e.timestamp, e.message
+            LogLevel::Info(e) => println!(
+                "\x1b[90m[{:?}]\x1b[0m \x1b[33mINFO:\x1b[0m {}", timestamp, e
             ),
-            LogLevel::Error(e) => write!(
-                f, "\x1b[90m[{:?}]\x1b[0m \x1b[31mERROR:\x1b[0m {}", e.timestamp, e.message
+            LogLevel::Error(e) => println!(
+                "\x1b[90m[{}]\x1b[0m \x1b[31mERROR:\x1b[0m {}", timestamp, e
             ),
-            LogLevel::Panic(e) => write!(
-                f, "\x1b[90m[{:?}]\x1b[0m \x1b[31mPANIC:\x1b[0m {}", e.timestamp, e.message
+            LogLevel::Panic(e) => println!(
+                "\x1b[90m[{}]\x1b[0m \x1b[31mPANIC:\x1b[0m {}", timestamp, e
             ),
-            LogLevel::Flush => Ok(())
+            LogLevel::Flush => {}
         }
     }
 }

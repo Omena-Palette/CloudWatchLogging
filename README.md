@@ -14,7 +14,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-cloudwatch-logging = "0.2.3"
+cloudwatch-logging = "0.2.4"
 ```
 
 ### Breaking Changes
@@ -34,15 +34,17 @@ use cloudwatch_logging::prelude::*;
 
 async fn example() -> Result<(), LoggerError> {
     let logger = LoggerHandle::setup(
-        "my-log-group",
-        "my-log-stream",
-        20, // batch size
-        Duration::from_secs(5), // flush interval
+        "test-group",     // log group
+        "test-stream",    // log stream
+        20,               // batch size
+        Duration::from_secs(5),  // flush interval
     ).await?;
     
     logger.info("Hello, world!".to_string()).await?;
     logger.error("Something went wrong!".to_string()).await
 }
+
+cloudwatch_logging::__doc_test!(example);
 ```
 
 **`singleton` Feature**
@@ -51,16 +53,19 @@ use cloudwatch_logging::prelude::*;
 
 #[cfg(feature = "singleton")]
 async fn example() -> Result<(), LoggerError> {
-    let logger = LoggerHandle::get_or_setup( // will only setup once
-        "my-log-group",
-        "my-log-stream",
-        20, // batch size
-        Duration::from_secs(5), // flush interval
+    let logger = LoggerHandle::get_or_setup(  // will only setup once
+        "test-group",   // log group
+        "test-stream",  // log stream
+        20,             // batch size
+        Duration::from_secs(5),  // flush interval
     ).await?;
     
     logger.info("Hello, world!".to_string()).await?;
     logger.error("Something went wrong!".to_string()).await
 }
+
+#[cfg(feature = "singleton")]
+cloudwatch_logging::__doc_test!(example);
 ```
 
 **Logging Panics**
@@ -70,14 +75,20 @@ use cloudwatch_logging::prelude::*;
 
 async fn example() -> Result<(), LoggerError> {
     let logger = LoggerHandle::setup(
-        "my-log-group",
-        "my-log-stream",
-        20, // batch size
-        Duration::from_secs(5), // flush interval
+        "test-group",   // log group
+        "test-stream",  // log stream
+        20,             // batch size
+        Duration::from_secs(5),  // flush interval
     ).await?;
     
-    logger.log_panics() // future panics will be logged to cloudwatch
+    logger.log_panics();  // future panics will be logged to cloudwatch
+    
+    panic!("This will be logged to cloudwatch!");
+    
+    Ok(())
 }
+
+cloudwatch_logging::__doc_test_panics!(example, "This will be logged to cloudwatch!");
 ```
 
 ### License
@@ -87,6 +98,6 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 We'd like to acknowledge the incredible work of the Rusoto community for their AWS SDK, their thoughtful implementation
 of Smithy, and their dedication to the Rust community. 
 
-### Rusoto
-Rusoto is no longer maintained, although it is stable, and widely used in production still. Once the official AWS SDK
-is stable, this library will be updated to use it instead.
+### Rusoto & Official AWS SDK for Rust
+Rusoto is no longer maintained, although, it is still appropriate for and used in production environments. Once the
+official AWS SDK for Rust is stable, this crate will be updated to use it instead.

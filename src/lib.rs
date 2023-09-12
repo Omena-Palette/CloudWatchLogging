@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 //! <br><br>
 //!
@@ -12,5 +14,5 @@ pub(crate) mod levels;
 pub(crate) mod sync;
 
 pub use prelude::{
-    Logger, LoggerHandle, Setup, LoggerError
+    Logger, LoggerHandle, SetupLogger, LoggerError
 };

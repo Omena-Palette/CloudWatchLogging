@@ -10,7 +10,7 @@ pub enum LoggerError {
     InvalidLogEventBatch,
     DescribeLogStreamError(rusoto_core::RusotoError<rusoto_logs::DescribeLogStreamsError>),
     SendError(SendError<LogLevel>),
-
+    SysTimeError(std::time::SystemTimeError),
     #[cfg(feature = "singleton")]
     Poisoned
 }
@@ -38,6 +38,9 @@ fn format_logger_error(l: &LoggerError, fmt: &mut Formatter) -> std::fmt::Result
         LoggerError::SendError(e) => {
             write!(fmt, "SendError: {:?}", e)
         }
+        LoggerError::SysTimeError(e) => {
+            write!(fmt, "SysTimeError: {:?}", e)
+        }
         #[cfg(feature = "singleton")]
         LoggerError::Poisoned => {
             write!(fmt, "Poisoned")
@@ -54,6 +57,12 @@ impl From<SendError<LogLevel>> for LoggerError {
 impl From<rusoto_core::RusotoError<rusoto_logs::DescribeLogStreamsError>> for LoggerError {
     fn from(e: rusoto_core::RusotoError<rusoto_logs::DescribeLogStreamsError>) -> Self {
         LoggerError::DescribeLogStreamError(e)
+    }
+}
+
+impl From<std::time::SystemTimeError> for LoggerError {
+    fn from(e: std::time::SystemTimeError) -> Self {
+        LoggerError::SysTimeError(e)
     }
 }
 
