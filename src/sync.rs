@@ -38,7 +38,7 @@ where
     ///
     /// This function returns the inner value if it's already initialized,
     /// or it initializes and returns it if not.
-    pub async fn get_or_init(
+    pub async fn get_or_init<const ENV: bool>(
         &self, log_group_name: &'static str, log_stream_name: &'static str,
         batch_size: usize, interval: Duration
     ) -> Result<&T, LoggerError> {
@@ -57,9 +57,19 @@ where
             Ordering::Relaxed
         ) {
             Ok(_) => {
-                let result = H::setup(
-                    log_group_name, log_stream_name, batch_size, interval
-                ).await;
+                let result = if ENV {
+                    unsafe {
+                        H::setup_with_env(
+                            log_group_name, log_stream_name,
+                            batch_size, interval
+                        ).await
+                    }
+                } else {
+                    H::setup(
+                        log_group_name, log_stream_name,
+                        batch_size, interval
+                    ).await
+                };
 
                 match result {
                     Ok(value) => {
@@ -128,7 +138,7 @@ mod tests {
 
         let handle: Lazy<LoggerHandle, Logger> = new_lazy();
 
-        let _hello = handle.get_or_init(
+        let _hello = handle.get_or_init::<false>(
             "test-group", "test-stream", 2, Duration::from_secs(1)
         ).await.cloned();
 
@@ -162,6 +172,17 @@ mod loom_tests {
                 a_value: 1
             })
         }
+
+        async unsafe fn setup_with_env(
+            log_group_env_name: &'static str, log_stream_env_name: &'static str,
+            batch_size: usize, interval: Duration
+        ) -> Result<AStructForLoom, LoggerError> {
+
+            Self::setup(
+                log_group_env_name, log_stream_env_name,
+                batch_size, interval
+            ).await
+        }
     }
 
     impl Default for Lazy<AStructForLoom, AStructForLoom> {
@@ -176,7 +197,7 @@ mod loom_tests {
 
     fn loom_helper(handle_clone: Arc<Lazy<AStructForLoom, AStructForLoom>>) {
         let out = block_on(async {
-            handle_clone.get_or_init(
+            handle_clone.get_or_init::<false>(
                 "test-group", "test-stream", 2, Duration::from_secs(1)
             ).await.cloned().unwrap()
         });

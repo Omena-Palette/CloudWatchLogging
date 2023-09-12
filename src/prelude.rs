@@ -217,12 +217,38 @@ macro_rules! setup_doc {
     }
 }
 
+#[cfg(feature = "singleton")]
+macro_rules! setup_from_env_doc {
+    () => {
+        concat!(
+            " # Safety\n",
+            "\n",
+            " This function intentionally leaks the input strings.\n",
+            "\n",
+            " It's designed to be invoked exclusively by the [`LoggerHandle::get_or_setup_with_env`] method. Specifically, this function\n",
+            " isn't directly invoked; instead, it's encapsulated within the private `sync::Lazy<H, T>` struct, ensuring a single execution.\n",
+            " This guarantee is validated with `loom` and analyzed using `valgrind`.\n",
+            "\n",
+            " While this doesn't result in Undefined Behavior (UB), it's marked as `unsafe` due to the memory leak.\n"
+        )
+    }
+}
+
 #[async_trait::async_trait]
 pub trait SetupLogger<T, E> {
     #[doc = "<sub>(this is only implemented for and is the same documentation as [LoggerHandle](LoggerHandle)'s implementation)</sub><br><br>"]
     #[doc = setup_doc!()]
     async fn setup(
         log_group_name: &'static str, log_stream_name: &'static str,
+        batch_size: usize, interval: Duration
+    ) -> Result<T, E>;
+
+    #[cfg(feature = "singleton")]
+    #[doc = "<sub>(this is only implemented for and is the same documentation as [LoggerHandle](LoggerHandle)'s implementation)</sub><br><br>"]
+    #[doc = setup_from_env_doc!()]
+    #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
+    async unsafe fn setup_with_env(
+        log_group_env_name: &'static str, log_stream_env_name: &'static str,
         batch_size: usize, interval: Duration
     ) -> Result<T, E>;
 }
@@ -309,6 +335,25 @@ impl SetupLogger<Logger, LoggerError> for LoggerHandle {
 
         Ok(Logger::new(sender))
     }
+
+    #[cfg(feature = "singleton")]
+    #[doc = setup_from_env_doc!()]
+    #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
+    async unsafe fn setup_with_env(
+        log_group_env_name: &'static str, log_stream_env_name: &'static str,
+        batch_size: usize, interval: Duration
+    ) -> Result<Logger, LoggerError> {
+        let log_group_name = env::var(log_group_env_name)
+            .map_err(|_| LoggerError::InvalidLogGroup)?;
+
+        let log_stream_name = env::var(log_stream_env_name)
+            .map_err(|_| LoggerError::InvalidLogStream)?;
+
+        let log_group_name: &'static str = Box::leak(log_group_name.into_boxed_str());
+        let log_stream_name: &'static str = Box::leak(log_stream_name.into_boxed_str());
+
+        Self::setup(log_group_name, log_stream_name, batch_size, interval).await
+    }
 }
 
 impl LoggerHandle {
@@ -324,7 +369,7 @@ impl LoggerHandle {
     ///
     /// # Returns
     ///
-    /// A static ref to a result containing a `Logger` on success or a `LoggerError` on failure.
+    /// A result containing a `Logger` on success or a `LoggerError` on failure.
     ///
     /// # Example
     /// ```
@@ -350,7 +395,66 @@ impl LoggerHandle {
         batch_size: usize, interval: Duration
     ) -> Result<Logger, LoggerError> {
         static LOGGER: Lazy<LoggerHandle, Logger> = new_lazy();
-        LOGGER.get_or_init(log_group_name, log_stream_name, batch_size, interval).await.cloned()
+        LOGGER.get_or_init::<false>(
+            log_group_name, log_stream_name, batch_size, interval
+        ).await.cloned()
+    }
+
+    /// [get_or_setup](LoggerHandle::get_or_setup) but with environment variable names for the
+    /// log group and stream names.
+    ///
+    /// <br>
+    ///
+    /// This leaks the input strings, as this is a static background process, these values must
+    /// live until the end of the program.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_group_env_name` - Key for the environment variable containing the AWS CloudWatch Log
+    ///                          group name.
+    /// * `log_stream_env_name` - Key for the environment variable containing the AWS CloudWatch Log
+    ///                           stream name.
+    /// * `batch_size` - Maximum number of log entries to keep before sending a batch to CloudWatch.
+    /// * `interval` - Time duration to wait between log sends.
+    ///
+    /// # Returns
+    ///
+    /// A result containing a `Logger` on success or a `LoggerError` on failure.
+    ///
+    /// # Example
+    /// ```
+    /// use cloudwatch_logging::prelude::*;
+    /// use std::env;
+    ///
+    /// async fn example() -> Result<(), LoggerError> {
+    ///     env::set_var("TEST_GROUP", "test-group");
+    ///     env::set_var("TEST_STREAM", "test-stream");
+    ///
+    ///     let logger = LoggerHandle::get_or_setup_with_env(
+    ///         "TEST_GROUP", "TEST_STREAM", 2, Duration::from_secs(1)
+    ///     ).await?;
+    ///
+    ///     logger.info("test".to_string()).await?;
+    ///     logger.flush().await?;
+    ///
+    ///     Ok(())
+    /// }
+    ///
+    /// cloudwatch_logging::__doc_test!(example);
+    /// ```
+    #[cfg(all(feature = "singleton", not(all(test, feature = "loom"))))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
+    pub async fn get_or_setup_with_env(
+        log_group_env_name: &'static str, log_stream_env_name: &'static str,
+        batch_size: usize, interval: Duration
+    ) -> Result<Logger, LoggerError> {
+        static LOGGER: Lazy<LoggerHandle, Logger> = new_lazy();
+        LOGGER.get_or_init::<true>(
+            log_group_env_name, log_stream_env_name,
+            batch_size, interval
+        )
+            .await
+            .cloned()
     }
 
     /// Retrieves the sequence token for the specified log stream.

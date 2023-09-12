@@ -1,12 +1,14 @@
 # CloudWatch Logging SDK for Rust
 
-The CloudWatch Logging SDK for Rust provides a simple and efficient way to log to Amazon CloudWatch Logs.
+The CloudWatch Logging SDK for Rust provides a simple and efficient way to log to [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/).
 
 ### Features
 
 - Easy setup for CloudWatch logging.
 - Automatic batching and non-blocking flushes for optimal performance.
 - Seamless panic logging for enhanced reliability.
+- Singleton feature for easy access to the logger from anywhere in your application.
+- Thread-safe, ensuring consistent logging across multithreaded applications.
 
 ### Installation
 
@@ -14,7 +16,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-cloudwatch-logging = "0.2.4"
+cloudwatch-logging = "0.2.5"
 ```
 
 ### Breaking Changes
@@ -47,27 +49,6 @@ async fn example() -> Result<(), LoggerError> {
 cloudwatch_logging::__doc_test!(example);
 ```
 
-**`singleton` Feature**
-```rust
-use cloudwatch_logging::prelude::*;
-
-#[cfg(feature = "singleton")]
-async fn example() -> Result<(), LoggerError> {
-    let logger = LoggerHandle::get_or_setup(  // will only setup once
-        "test-group",   // log group
-        "test-stream",  // log stream
-        20,             // batch size
-        Duration::from_secs(5),  // flush interval
-    ).await?;
-    
-    logger.info("Hello, world!".to_string()).await?;
-    logger.error("Something went wrong!".to_string()).await
-}
-
-#[cfg(feature = "singleton")]
-cloudwatch_logging::__doc_test!(example);
-```
-
 **Logging Panics**
 
 ```rust
@@ -90,6 +71,57 @@ async fn example() -> Result<(), LoggerError> {
 
 cloudwatch_logging::__doc_test_panics!(example, "This will be logged to cloudwatch!");
 ```
+
+**`singleton` Feature**
+
+```rust
+use cloudwatch_logging::prelude::*;
+
+#[cfg(feature = "singleton")]
+async fn example() -> Result<(), LoggerError> {
+    let logger = LoggerHandle::get_or_setup(  // will only setup once
+        "test-group",   // log group
+        "test-stream",  // log stream
+        20,             // batch size
+        Duration::from_secs(5),  // flush interval
+    ).await?;
+    
+    logger.info("Hello, world!".to_string()).await?;
+    logger.error("Something went wrong!".to_string()).await
+}
+
+#[cfg(feature = "singleton")]
+cloudwatch_logging::__doc_test!(example);
+```
+
+**`singleton` Feature**: initializing with environment variables
+
+```rust
+use cloudwatch_logging::prelude::*;
+use std::env;
+
+#[cfg(feature = "singleton")]
+async fn example() -> Result<(), LoggerError> {
+    env::set_var("TEST_GROUP", "test-group");
+    env::set_var("TEST_STREAM", "test-stream");
+    
+    let logger = LoggerHandle::get_or_setup_with_env(
+        "TEST_GROUP",   // log group env var
+        "TEST_STREAM",  // log stream env var
+        20,             // batch size
+        Duration::from_secs(5),  // flush interval
+    ).await?;
+    
+    logger.info("Hello, world!".to_string()).await?;
+    logger.error("Something went wrong!".to_string()).await
+}
+
+#[cfg(feature = "singleton")]
+cloudwatch_logging::__doc_test!(example);
+```
+
+### Documentation
+For more information, please refer to the [current documentation](https://docs.rs/cloudwatch-logging).
 
 ### License
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/Omena-Palette/CloudWatchLogging/blob/main/LICENSE) file for details.
