@@ -7,8 +7,8 @@ description = "A simple library for logging to AWS CloudWatch Logs"
 readme = "README.md"
 repository = "https://github.com/Omena-Palette/CloudWatchLogging"
 license = "MIT"
-keywords = ["aws", "cloudwatch", "logging"]
-categories = ["api-bindings", "development-tools::debugging"]
+keywords = ["aws", "cloudwatch", "logging", "async"]
+categories = ["api-bindings", "development-tools::debugging", "asynchronous"]
 exclude = [
     "tests/**/*",
 ]
