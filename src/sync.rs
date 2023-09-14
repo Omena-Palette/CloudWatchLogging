@@ -17,6 +17,25 @@ use tokio::time::Duration;
 use crate::error::LoggerError;
 use crate::prelude::{Logger, LoggerHandle, SetupLogger};
 
+macro_rules! default_lazy_inner {
+    () => {
+        Self {
+            inner: core::cell::UnsafeCell::new(None),
+            state: AtomicU8::new(LoggerHandleState::Unloaded as u8),
+            _handle_phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+macro_rules! yield_now {
+    () => {
+        #[cfg(not(all(test, feature = "loom")))]
+        yield_now().await;
+        #[cfg(all(test, feature = "loom"))]
+        yield_now();
+    }
+}
+
 enum LoggerHandleState {
     Unloaded = 0,
     Locked = 1,
@@ -91,10 +110,7 @@ where
                     return Err(LoggerError::Poisoned);
                 }
                 while self.state.load(Ordering::Acquire) != LoggerHandleState::Ready as u8 {
-                    #[cfg(not(all(test, feature = "loom")))]
-                    yield_now().await;
-                    #[cfg(all(test, feature = "loom"))]
-                    yield_now();
+                    yield_now!();
                 }
                 unsafe {
                     Ok((*self.inner.get()).as_ref().ok_or(LoggerError::Poisoned)?)
@@ -104,13 +120,11 @@ where
     }
 }
 
+
+
 impl Default for Lazy<LoggerHandle, Logger> {
     fn default() -> Self {
-        Self {
-            inner: core::cell::UnsafeCell::new(None),
-            state: AtomicU8::new(LoggerHandleState::Unloaded as u8),
-            _handle_phantom: std::marker::PhantomData,
-        }
+        default_lazy_inner!()
     }
 }
 
@@ -149,13 +163,11 @@ mod tests {
 #[cfg(all(test, feature = "loom"))]
 mod loom_tests {
     use super::*;
-    use crate::prelude::__tests::{setup, teardown};
 
     use loom::thread;
     use loom::sync::Arc;
     use loom::future::block_on;
     use async_trait::async_trait;
-
 
     #[derive(Clone)]
     struct AStructForLoom {
@@ -187,27 +199,22 @@ mod loom_tests {
 
     impl Default for Lazy<AStructForLoom, AStructForLoom> {
         fn default() -> Self {
-            Self {
-                inner: core::cell::UnsafeCell::new(None),
-                state: AtomicU8::new(LoggerHandleState::Unloaded as u8),
-                _handle_phantom: std::marker::PhantomData,
-            }
+            default_lazy_inner!()
         }
     }
 
     fn loom_helper(handle_clone: Arc<Lazy<AStructForLoom, AStructForLoom>>) {
         let out = block_on(async {
             handle_clone.get_or_init::<false>(
-                "test-group", "test-stream", 2, Duration::from_secs(1)
+                "test-group", "test-stream",
+                2, Duration::from_secs(1)
             ).await.cloned().unwrap()
         });
         assert_eq!(out.a_value, 1);
     }
 
-    #[tokio::test]
-    async fn test_lazy_logger_handle() {
-        setup().await;
-
+    #[test]
+    fn test_lazy_logger_handle() {
         loom::model(|| {
             let handle: Lazy<AStructForLoom, AStructForLoom> = Lazy::default();
 
@@ -225,7 +232,5 @@ mod loom_tests {
             t1.join().unwrap();
             t2.join().unwrap();
         });
-
-        teardown().await;
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "cloudwatch_logging"
-version = "0.2.51"
+version = "1.0.0"
 edition = "2021"
 authors = ["Omena Inc. <info@omena.ai>", "Clelland Green III"]
 description = "A simple library for logging to AWS CloudWatch Logs"
@@ -21,9 +21,10 @@ include = [
 singleton = []
 DEBUG = []
 
-loom = []
+loom = ["singleton"]
 doc_tests = []
 im_ok_paying_for_testing = []
+
 default = []
 
 [dependencies]

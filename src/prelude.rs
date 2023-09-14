@@ -449,9 +449,7 @@ impl LoggerHandle {
         LOGGER.get_or_init::<true>(
             log_group_env_name, log_stream_env_name,
             batch_size, interval
-        )
-            .await
-            .cloned()
+        ).await.cloned()
     }
 
     /// Retrieves the sequence token for the specified log stream.
@@ -623,6 +621,7 @@ pub mod __tests {
     pub async fn teardown() {
         delete_test_requirements().await;
     }
+
     async fn create_test_log_group_and_stream() {
         use rusoto_logs::{CreateLogGroupRequest, CreateLogStreamRequest};
         let client = CloudWatchLogsClient::new(Region::from_str(
@@ -662,6 +661,7 @@ pub mod __tests {
     }
 
     #[allow(dead_code)]
+    #[cfg_attr(miri, ignore)]
     pub async fn get_test_logs_from_cloudwatch() -> Vec<OutputLogEvent> {
         use rusoto_logs::GetLogEventsRequest;
         let client = CloudWatchLogsClient::new(Region::from_str(
@@ -680,6 +680,7 @@ pub mod __tests {
     }
 
     #[tokio::test]
+    #[cfg_attr(miri, ignore)]
     async fn run_logger() {
         setup().await;
         let logger = LoggerHandle::setup(
@@ -697,6 +698,7 @@ pub mod __tests {
     }
 
     #[tokio::test]
+    #[cfg_attr(miri, ignore)]
     async fn test_logger_batching() {
         setup().await;
         let logger = LoggerHandle::setup(
@@ -722,6 +724,7 @@ pub mod __tests {
     }
 
     #[tokio::test]
+    #[cfg_attr(miri, ignore)]
     async fn test_logger_batching_timeout() {
         setup().await;
         let logger = LoggerHandle::setup(
@@ -745,6 +748,7 @@ pub mod __tests {
     }
 
     #[tokio::test]
+    #[cfg_attr(miri, ignore)]
     async fn test_not_enough_space() {
         setup().await;
         let logger = LoggerHandle::setup(
@@ -779,6 +783,7 @@ pub mod __tests {
 
     #[cfg(feature = "im_ok_paying_for_testing")]
     #[tokio::test]
+    #[cfg_attr(miri, ignore)]
     async fn spam_not_enough_space() {
         setup().await;
         let logger = LoggerHandle::setup(
@@ -824,9 +829,9 @@ pub mod __tests {
         ($test_fn:expr) => {
             #[cfg(feature = "doc_tests")]
             tokio_test::block_on(async {
-                __tests::setup().await;
+                ::cloudwatch_logging::prelude::__tests::setup().await;
                 $test_fn().await.unwrap();
-                __tests::teardown().await;
+                ::cloudwatch_logging::prelude::__tests::teardown().await;
             });
         };
     }
